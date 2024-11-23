@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Componente {
+    char nome[50];
+    char tipo[20];
+    char especificacoes[100];
+    struct Componente* prox;
+} Componente;
+
+typedef struct Configuracao {
+    char nome[50];
+    Componente* componentes;
+    struct Configuracao* prox;
+} Configuracao;
+
+Componente* criarComponente(const char* nome, const char* tipo, const char* especificacoes) {
+    Componente* novo = (Componente*)malloc(sizeof(Componente));
+    strcpy(novo->nome, nome);
+    strcpy(novo->tipo, tipo);
+    strcpy(novo->especificacoes, especificacoes);
+    novo->prox = NULL;
+    return novo;
+}
+
+void adicionarComponente(Configuracao* config, Componente* componente) {
+    componente->prox = config->componentes;
+    config->componentes = componente;
+}
+
+Configuracao* criarConfiguracao(const char* nome) {
+    Configuracao* nova = (Configuracao*)malloc(sizeof(Configuracao));
+    strcpy(nova->nome, nome);
+    nova->componentes = NULL;
+    nova->prox = NULL;
+    return nova;
+}
+
+void exibirConfiguracao(Configuracao* config) {
+    printf("Configuração: %s\n", config->nome);
+    Componente* atual = config->componentes;
+    while (atual != NULL) {
+        printf("  - Nome: %s | Tipo: %s | Especificações: %s\n", atual->nome, atual->tipo, atual->especificacoes);
+        atual = atual->prox;
+    }
+}
+
+void verificarCompatibilidade(Configuracao* config) {
+    Componente* cpu = NULL;
+    Componente* motherboard = NULL;
+    Componente* atual = config->componentes;
+
+    while (atual != NULL) {
+        if (strcmp(atual->tipo, "CPU") == 0) {
+            cpu = atual;
+        }
+        if (strcmp(atual->tipo, "Motherboard") == 0) {
+            motherboard = atual;
+        }
+        atual = atual->prox;
+    }
+
+    if (cpu != NULL && motherboard != NULL) {
+        if (strstr(motherboard->especificacoes, "LGA 1700") && strstr(cpu->especificacoes, "LGA 1700")) {
+            printf("Compatibilidade CPU-Placa-Mãe: Compatível\n");
+        } else {
+            printf("Compatibilidade CPU-Placa-Mãe: Incompatível\n");
+        }
+    } else {
+        printf("Configuração incompleta para verificação de compatibilidade.\n");
+    }
+}
+
+int main() {
+    // Criar uma configuração
+    Configuracao* minhaConfig = criarConfiguracao("Meu PC Gamer");
+
+    adicionarComponente(minhaConfig, criarComponente("Intel Core i7", "CPU", "3.8 GHz, LGA 1700"));
+    adicionarComponente(minhaConfig, criarComponente("ASUS Z690", "Motherboard", "Chipset Z690, LGA 1700"));
+    adicionarComponente(minhaConfig, criarComponente("NVIDIA RTX 3080", "GPU", "10GB GDDR6X"));
+
+    exibirConfiguracao(minhaConfig);
+
+    verificarCompatibilidade(minhaConfig);
+
+    Componente* atual = minhaConfig->componentes;
+    while (atual != NULL) {
+        Componente* temp = atual;
+        atual = atual->prox;
+        free(temp);
+    }
+    free(minhaConfig);
+
+    return 0;
+}
